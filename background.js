@@ -20,7 +20,7 @@ var sessionTabId = null
 
 chrome.browserAction.onClicked.addListener(function(tab) {
 
-  // Copy the current
+  // Wait for the page to load before copying the URL to the clipboard.
   chrome.tabs.onUpdated.addListener(function listener(tabId, changedInfo, tab) {
 
     if (tabId != sessionTabId || changedInfo.status != "complete")
