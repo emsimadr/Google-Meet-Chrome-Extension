@@ -1,51 +1,56 @@
+
+//Setting the Google Meets URL to start a new session
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.storage.sync.set({"meetStartUrl": "https://meet.google.com/new?hs=190"})
+});
+
+//Can not write directly to clipboard, so I had to use a workaround.
+//This copies a text from a dummy textarea DOM element to the clipboard.
+//The text is set to the Google Meet Session URL.
 function copyToClipboard(text) {
     var dummy = document.createElement("textarea");
-    // to avoid breaking orgain page when copying more words
-    // cant copy when adding below this code
-    // dummy.style.display = 'none'
     document.body.appendChild(dummy);
-    //Be careful if you use texarea. setAttribute('value', value), which works with "input" does not work with "textarea". – Eduard
     dummy.value = text;
     dummy.select();
     document.execCommand("copy");
     document.body.removeChild(dummy);
 }
 
-chrome.runtime.onInstalled.addListener(function() {
-  chrome.storage.sync.set({"meetStartUrl": "https://meet.google.com/new?hs=190"})
-});
-
-var targetId = null
+var sessionTabId = null
 
 chrome.browserAction.onClicked.addListener(function(tab) {
 
+  // Copy the current
   chrome.tabs.onUpdated.addListener(function listener(tabId, changedInfo, tab) {
 
-    if (tabId != targetId || changedInfo.status != "complete")
+    if (tabId != sessionTabId || changedInfo.status != "complete")
       return;
 
-    chrome.storage.sync.set({"meetCurrentUrl": tab.url})
+    chrome.storage.sync.set({"meetSessionUrl": tab.url})
     copyToClipboard(tab.url)
 
     chrome.tabs.onUpdated.removeListener(listener)
   });
 
+  // Remove the session information when the tab closed.
   chrome.tabs.onRemoved.addListener(function listener(tabId, removeInfo) {
-    if (tabId == targetId) {
-      chrome.storage.sync.remove(["meetCurrentUrl"])
-      targetId = null;
+    if (tabId == sessionTabId) {
+      chrome.storage.sync.remove(["meetSessionUrl"])
+      sessionTabId = null;
     }
   });
 
-  if (targetId == null) {
-    // Create a new Meet session
+  // If there is not active Google Meets Session, then create a new session.
+  // Otherwise change to the active session tab.
+  if (sessionTabId == null) {
+    // Create a new Google Meet session
     chrome.storage.sync.get(["meetStartUrl"], function(result) {
       chrome.tabs.create({"url": result.meetStartUrl}, function(tab) {
-        targetId = tab.id
+        sessionTabId = tab.id
       });
     });
   } else {
-    // Focus on existing Meet session
-    chrome.tabs.update(targetId, {highlighted: true})
+    // Focus on the active Google Meet session tab.
+    chrome.tabs.update(sessionTabId, {highlighted: true})
   }
 });
