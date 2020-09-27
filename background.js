@@ -21,6 +21,7 @@ var sessionTabId = null
 chrome.browserAction.onClicked.addListener(function(tab) {
 
   // Wait for the page to load before copying the URL to the clipboard.
+
   chrome.tabs.onUpdated.addListener(function listener(tabId, changedInfo, tab) {
 
     if (tabId != sessionTabId || changedInfo.status != "complete")
@@ -51,6 +52,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     });
   } else {
     // Focus on the active Google Meet session tab.
-    chrome.tabs.update(sessionTabId, {highlighted: true})
+    chrome.tabs.update(sessionTabId, {selected: true})
   }
 });
